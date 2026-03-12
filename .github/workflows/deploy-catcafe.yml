@@ -1,0 +1,28 @@
+name: Deploy Cat Cafe a GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'videojuegos/mirepo_videojuegos/tareas/paginasweb/catcafe/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Copiar carpeta catcafe a la raíz temporal
+        run: |
+          mkdir -p public
+          cp -r videojuegos/mirepo_videojuegos/tareas/paginasweb/catcafe/* public/
+
+      - name: Desplegar a GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
