@@ -15,18 +15,18 @@ let game;
 let oldTime = 0;
 
 //gameplay constants
-const BALL_SPEED = 0.4;
+const BALL_SPEED = 0.5;
 const PADDLE_SPEED = 0.6;
-const BLOCK_ROWS = 5;  //configurable number of rows
+const BLOCK_ROWS = 6;  //configurable number of rows
 const BLOCK_COLS = 10;  //configurable number of columns
-const BLOCK_WIDTH = 68;
+const BLOCK_WIDTH = 70;
 const BLOCK_HEIGHT = 25;
 const BLOCK_PADDING = 5;
 const BLOCK_OFFSET_TOP = 80;
 const BLOCK_OFFSET_LEFT = 36;
 
 //colors for each row of blocks
-const ROW_COLORS = ["#e74c3c", "#f79948", "#f1c40f", "#2ecc71", "#3498db"];
+const ROW_COLORS = ["#e74c3c", "#f79948", "#f1c40f", "#2ecc71", "#3498db", "#5d209b"];
 
 //duration in ms that bonus balls stay alive
 const BONUS_BALL_DURATION = 15000;
@@ -36,8 +36,8 @@ class Block extends GameObject {
     constructor(position, width, height, color) {
         super(position, width, height, color, "block");
         this.destroy = false;  //flag to mark for removal
-        this.points = 1;  //base points per block
-    }
+        this.points = 2;  //base points per block
+    } 
 }
 
 class Ball extends GameObject {
@@ -64,7 +64,7 @@ class Ball extends GameObject {
             this.lifeTimer += deltaTime;  //accumulate time alive
         }
 
-        const speed = this.isBonus ? BALL_SPEED * 1.2 : BALL_SPEED;  //bonus balls slightly faster
+        const speed = this.isBonus ? BALL_SPEED * 2.2 : BALL_SPEED;  //bonus balls slightly faster
         this.velocity = this.velocity.normalize().times(speed);
         this.position = this.position.plus(this.velocity.times(deltaTime));
     }
@@ -120,6 +120,10 @@ class Paddle extends GameObject {
 
 class Game {
     constructor() {
+        // Add audio element - $
+        this.ping = document.createElement("audio");
+        this.ping.src = "../assets/audio/18691_1517423527.wav";
+
         this.lives = 3;
         this.score = 0;
         this.blocksDestroyed = 0;
@@ -136,23 +140,21 @@ class Game {
 
     initObjects() {
         this.paddle = new Paddle(
-            new Vector(canvasWidth / 2, canvasHeight - 40),
-            100, 15, "#ecf0f1"
+            new Vector(canvasWidth / 2, canvasHeight - 40), 100, 15, "#ecf0f1"
         );
 
         this.ball = new Ball(
-            new Vector(canvasWidth / 2, canvasHeight - 60),
-            12, 12, "#f0f0f0"
+            new Vector(canvasWidth / 2, canvasHeight - 60), 12, 12, "#f0f0f0"
         );
 
         // ui labels
         this.scoreLabel = new TextLabel(20, 30, "18px 'Courier New'", "#ffffff");
         this.livesLabel = new TextLabel(canvasWidth / 2 - 70, 30, "18px 'Courier New'", "#ffffff");
         this.blocksLabel = new TextLabel(canvasWidth - 150, 30, "18px 'Courier New'", "#ffffff");
-        this.messageLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2, "36px 'Courier New'", "#ffffff");
+        this.messageLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2, "36px 'Courier New'", "#ffffff");  
         this.subMessageLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2 + 50, "20px 'Courier New'", "#aaaaaa");
-        this.bonusLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2 - 60, "22px 'Courier New'", "#f39c12");
-        this.timerLabel = new TextLabel(canvasWidth / 2, 55, "14px 'Courier New'", "#f39c12");
+        this.bonusLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2, "22px 'Courier New'", "#f39c12");
+        this.timerLabel = new TextLabel(canvasWidth / 2 - 80, canvasHeight / 2 + 30, "18px 'Courier New'", "#f39c12");
 
         this.buildBlocks();
     }
@@ -172,23 +174,23 @@ class Game {
     }
 
     spawnBonusBalls() {
-        // add 2 bonus balls when score hits a multiple of 15 blocks destroyed
+        //add 2 bonus balls when score hits a multiple of 15 blocks destroyed
         for (let i = 0; i < 2; i++) {
-            const offsetX = (i === 0) ? -30 : 30;  // spread them slightly apart
+            const offsetX = (i === 0) ? -30 : 30;  //spread them slightly apart
             const bonus = new Ball(
                 new Vector(this.paddle.position.x + offsetX, canvasHeight - 70),
-                10, 10, "#f39c12", true  // orange color for bonus balls
+                10, 10, "#f39c12", true  //orange color for bonus balls
             );
             bonus.launch();
             this.bonusBalls.push(bonus);
         }
 
-        this.bonusMessage = "MULTI BALL x2!  15 sec";
-        this.bonusMessageTimer = 2500;  // show message for 2.5 seconds
+        this.bonusMessage = "MULTI BALLS FOR 15 sec";
+        this.bonusMessageTimer = 1500;  //show message for 2.5 seconds
     }
 
     checkBonusTrigger() {
-        // trigger bonus every 15 blocks destroyed, but only once per milestone
+        //trigger bonus every 15 blocks destroyed, but only once per milestone
         const milestone = Math.floor(this.blocksDestroyed / 15);
         const lastMilestone = Math.floor(this.lastBonusScore / 15);
 
@@ -209,7 +211,7 @@ class Game {
 
                 this.checkBonusTrigger();
 
-                // figure out which side the ball hit to reflect correctly
+                //figure out which side the ball hit to bounce correctly
                 const ballL = ball.position.x - ball.halfSize.x;
                 const ballR = ball.position.x + ball.halfSize.x;
                 const ballT = ball.position.y - ball.halfSize.y;
@@ -227,12 +229,12 @@ class Game {
                 const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
                 if (minOverlap === overlapTop || minOverlap === overlapBottom) {
-                    ball.velocity.y *= -1;  // reflect vertically
+                    ball.velocity.y *= -1;  //bounce vertically
                 } else {
-                    ball.velocity.x *= -1;  // reflect horizontally
+                    ball.velocity.x *= -1;  //bounce horizontally
                 }
 
-                break;  // only one block collision per frame per ball
+                break;  //only one block collision per frame per ball
             }
         }
 
@@ -240,22 +242,22 @@ class Game {
         this.blocks = this.blocks.filter(b => !b.destroy);
 
         if (this.blocks.length === 0) {
-            this.state = "win";  // all blocks cleared
+            this.state = "win";  //all blocks cleared
         }
     }
 
     handleWallCollisions(ball) {
-        // left wall
+        //left wall
         if (ball.position.x - ball.halfSize.x <= 0) {
             ball.position.x = ball.halfSize.x;
             ball.velocity.x *= -1;
         }
-        // right wall
+        //right wall
         if (ball.position.x + ball.halfSize.x >= canvasWidth) {
             ball.position.x = canvasWidth - ball.halfSize.x;
             ball.velocity.x *= -1;
         }
-        // top wall
+        //top wall
         if (ball.position.y - ball.halfSize.y <= 0) {
             ball.position.y = ball.halfSize.y;
             ball.velocity.y *= -1;
@@ -266,12 +268,12 @@ class Game {
         if (boxOverlap(ball, this.paddle)) {
             ball.position.y = this.paddle.position.y - this.paddle.halfSize.y - ball.halfSize.y;
 
-            // angle depends on where the ball hits the paddle
-            const hitPos = (ball.position.x - this.paddle.position.x) / this.paddle.halfSize.x;  // -1 to 1
-            const angle = hitPos * (Math.PI / 3);  // max 60 degrees
+            //angle depends on where the ball hits the paddle
+            const hitPos = (ball.position.x - this.paddle.position.x) / this.paddle.halfSize.x;  //-1 to 1
+            const angle = hitPos * (Math.PI / 3);  //max 60 degrees
             const speed = ball.velocity.magnitude();
             ball.velocity.x = Math.sin(angle) * speed;
-            ball.velocity.y = -Math.abs(Math.cos(angle) * speed);  // always bounce upward
+            ball.velocity.y = -Math.abs(Math.cos(angle) * speed);  //always bounce upward
         }
     }
 
@@ -280,30 +282,30 @@ class Game {
 
         this.paddle.update(deltaTime);
 
-        // update bonus message timer
+        //update bonus message timer
         if (this.bonusMessageTimer > 0) {
             this.bonusMessageTimer -= deltaTime;
         }
 
-        // main ball logic
+        //main ball logic
         if (this.ball.active) {
             this.ball.update(deltaTime);
             this.handleWallCollisions(this.ball);
             this.handlePaddleCollision(this.ball);
             this.handleBallBlockCollision(this.ball);
 
-            // ball fell below screen — lose a life
+            //ball fell below screen
             if (this.ball.position.y - this.ball.halfSize.y > canvasHeight) {
                 this.lives--;
                 if (this.lives <= 0) {
                     this.state = "gameover";
                 } else {
-                    this.ball.reset(canvasWidth / 2, canvasHeight - 60);  // respawn above paddle
+                    this.ball.reset(canvasWidth / 2, canvasHeight - 60);  //respawn above paddle
                 }
             }
         }
 
-        // bonus balls logic
+        //bonus balls logic
         for (let i = this.bonusBalls.length - 1; i >= 0; i--) {
             const bb = this.bonusBalls[i];
             bb.update(deltaTime);
@@ -311,7 +313,7 @@ class Game {
             this.handlePaddleCollision(bb);
             this.handleBallBlockCollision(bb);
 
-            // remove if expired or fell below screen
+            //remove if expired or fell below screen
             if (bb.isExpired() || bb.position.y - bb.halfSize.y > canvasHeight) {
                 this.bonusBalls.splice(i, 1);
             }
@@ -319,14 +321,14 @@ class Game {
     }
 
     drawBackground(ctx) {
-        // dark gradient background
+        //$dark gradient background
         const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
         grad.addColorStop(0, "#0f0c29");
         grad.addColorStop(1, "#24243e");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-        // subtle grid lines for depth
+        //$subtle grid lines for depth
         ctx.strokeStyle = "rgba(255,255,255,0.04)";
         ctx.lineWidth = 1;
         for (let x = 0; x < canvasWidth; x += 40) {
@@ -343,18 +345,18 @@ class Game {
         }
     }
 
-    drawHud(ctx) {
+    drawScreen(ctx) {
         this.scoreLabel.draw(ctx, `SCORE: ${this.score}`);
-        this.livesLabel.draw(ctx, `LIVES: ${"♥ ".repeat(this.lives).trim()}`);
+        this.livesLabel.draw(ctx, `LIVES: ${"♡ ".repeat(this.lives).trim()}`);
         this.blocksLabel.draw(ctx, `BLOCKS: ${this.blocksDestroyed}/${this.totalBlocks}`);
 
-        // show timer for active bonus balls
+        //show timer for active bonus balls
         if (this.bonusBalls.length > 0) {
             const remaining = Math.ceil((BONUS_BALL_DURATION - this.bonusBalls[0].lifeTimer) / 1000);
-            this.timerLabel.draw(ctx, `MULTI BALL: ${remaining}s`);
+            this.timerLabel.draw(ctx, `MULTI BALL: ${remaining}sec`);
         }
 
-        // show bonus triggered message
+        //show bonus triggered message
         if (this.bonusMessageTimer > 0) {
             ctx.save();
             ctx.textAlign = "center";
@@ -364,7 +366,7 @@ class Game {
     }
 
     drawOverlay(ctx, title, subtitle) {
-        // semi-transparent overlay for game over / win
+        //$semi-transparent overlay for game over / win
         ctx.fillStyle = "rgba(0,0,0,0.65)";
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -389,18 +391,18 @@ class Game {
     draw(ctx) {
         this.drawBackground(ctx);
 
-        // draw all blocks
+        //draw all blocks
         for (const block of this.blocks) {
             block.draw(ctx);
 
-            // subtle glow effect on top of blocks
+            //subtle glow effect on top of blocks $
             ctx.save();
             ctx.globalAlpha = 0.25;
             ctx.fillStyle = block.color;
             ctx.fillRect(
                 block.position.x - block.halfSize.x,
                 block.position.y - block.halfSize.y,
-                block.size.x, 4  // thin glow strip at top
+                block.size.x, 4  //thin glow strip at top
             );
             ctx.restore();
         }
@@ -408,7 +410,7 @@ class Game {
         this.paddle.draw(ctx);
         this.ball.draw(ctx);
 
-        // draw bonus balls with glow
+        //draw bonus balls with glow
         for (const bb of this.bonusBalls) {
             ctx.save();
             ctx.shadowColor = "#f39c12";
@@ -417,7 +419,7 @@ class Game {
             ctx.restore();
         }
 
-        this.drawHud(ctx);
+        this.drawScreen(ctx);
 
         if (this.state === "gameover") {
             this.drawOverlay(ctx, "GAME OVER", "press R to restart");
@@ -425,7 +427,7 @@ class Game {
             this.drawOverlay(ctx, "YOU WIN!", "press R to restart");
         }
 
-        // launch hint when ball is idle
+        //launch hint when ball is idle
         if (this.state === "playing" && !this.ball.active) {
             ctx.save();
             ctx.textAlign = "center";
@@ -448,16 +450,16 @@ class Game {
                 if (!this.ball.active && this.state === "playing") {
                     this.ball.launch();
                 }
-                event.preventDefault();  // prevent page scroll on space
+                event.preventDefault();  //prevent page scroll on space
             }
             if (event.key === 'r' || event.key === 'R') {
                 if (this.state !== "playing") {
-                    restartGame();  // restart from main
+                    restartGame();  //restart from main
                 }
             }
         });
 
-        window.addEventListener('keyup', (event) => {
+        window.addEventListener('keyup', (event) => { //$
             if (event.key === 'ArrowLeft' || event.key === 'a') {
                 this.delKey('left');
             }
@@ -467,13 +469,13 @@ class Game {
         });
     }
 
-    addKey(direction) {
+    addKey(direction) { //$
         if (!this.paddle.keys.includes(direction)) {
             this.paddle.keys.push(direction);
         }
     }
 
-    delKey(direction) {
+    delKey(direction) {  //$
         const idx = this.paddle.keys.indexOf(direction);
         if (idx !== -1) {
             this.paddle.keys.splice(idx, 1);
