@@ -64,7 +64,7 @@ class Ball extends GameObject {
             this.lifeTimer += deltaTime;  //accumulate time alive
         }
 
-        const speed = this.isBonus ? BALL_SPEED * 2.2 : BALL_SPEED;  //bonus balls slightly faster
+        const speed = this.isBonus ? BALL_SPEED * 0.5 : BALL_SPEED;  //bonus balls slightly faster
         this.velocity = this.velocity.normalize().times(speed);
         this.position = this.position.plus(this.velocity.times(deltaTime));
     }
@@ -121,8 +121,6 @@ class Paddle extends GameObject {
 class Game {
     constructor() {
         // Add audio element - $
-        this.ping = document.createElement("audio");
-        this.ping.src = "../assets/audio/18691_1517423527.wav";
 
         this.lives = 3;
         this.score = 0;
