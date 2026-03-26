@@ -143,7 +143,7 @@ class Game {
     initObjects() {
         //?add another object to draw a background
         this.background = new GameObject(new Vector(canvasWidth / 2, canvasHeight / 2), canvasWidth, canvasHeight);
-        this.background.setSprite("assets/sprites/trak2_plate2b.png");
+        this.background.setSprite("assets/sprites/Download premium vector of Geometrical patterned blue scifi background vector by Aum about background, technology, technology backgrounds, neon, and dark blue background 2340052.jpg");
 
         this.paddle = new Paddle(
             new Vector(canvasWidth / 2, canvasHeight - 40), 100, 15, "#ecf0f1"
@@ -154,9 +154,9 @@ class Game {
         );
 
         //?ui labels details
-        this.scoreLabel = new TextLabel(20, 30, "18px 'Courier New'", "#ffffff");
-        this.livesLabel = new TextLabel(canvasWidth / 2 - 70, 30, "18px 'Courier New'", "#ffffff");
-        this.blocksLabel = new TextLabel(canvasWidth - 150, 30, "18px 'Courier New'", "#ffffff");
+        this.scoreLabel = new TextLabel(20, 38, "18px 'Courier New'", "#ffffff");
+        this.livesLabel = new TextLabel(canvasWidth / 2 - 70, 38, "18px 'Courier New'", "#ffffff");
+        this.blocksLabel = new TextLabel(canvasWidth - 150, 38, "18px 'Courier New'", "#ffffff");
         this.messageLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2, "36px 'Courier New'", "#ffffff");  
         this.subMessageLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2 + 50, "20px 'Courier New'", "#aaaaaa");
         this.bonusLabel = new TextLabel(canvasWidth / 2, canvasHeight / 2, "22px 'Courier New'", "#f39c12");
@@ -364,7 +364,7 @@ class Game {
     }
 
     draw(ctx) {
-        this.background.draw(ctx);
+        this.background.draw(ctx);  //?draw the background first, so everything else is drawn on top
 
         for (const block of this.blocks) {  //?draw all blocks
             block.draw(ctx);
