@@ -30,6 +30,8 @@ destroy all the blocks using the ball and paddle before you run out of lives. th
 - if you lose all 3 lives, **GAME OVER**
 - if you destroy every block, **YOU WIN**
 - the screen shows your score, lives, and how many blocks you've taken out
+- 2 points are added per block destroyed
+- CAUTION!! if the main ball falls, you still lose a life
  
 ---
  

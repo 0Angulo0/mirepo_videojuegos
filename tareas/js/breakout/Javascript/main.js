@@ -1,142 +1,150 @@
 /*
- * Breakout game based on the Pong base code :)
- * Dani Angulo
- * 2026-03-24
+ & Breakout game based on the Pong base code by Gilberto Echeverria
+ & Dani Angulo
+ & 2026-03-24
  */
 
 "use strict";
 
-//canvas dimensions
+//*canvas dimensions, px
 const canvasWidth = 800;
 const canvasHeight = 600;
 
-let ctx;
-let game;
-let oldTime = 0;
+let ctx; //cotext of the canvas
+let game;  //a variable to store the game object
+let oldTime = 0;  //variable to store the time at the previous frame
 
-//gameplay constants
+//*gameplay settings, easier to code :)
 const BALL_SPEED = 0.5;
 const PADDLE_SPEED = 0.6;
-const BLOCK_ROWS = 6;  //configurable number of rows
-const BLOCK_COLS = 10;  //configurable number of columns
+const BLOCK_ROWS = 6;  
+const BLOCK_COLS = 10;  
 const BLOCK_WIDTH = 70;
 const BLOCK_HEIGHT = 25;
 const BLOCK_PADDING = 5;
-const BLOCK_OFFSET_TOP = 80;
-const BLOCK_OFFSET_LEFT = 36;
-
-//colors for each row of blocks
-const ROW_COLORS = ["#e74c3c", "#f79948", "#f1c40f", "#2ecc71", "#3498db", "#5d209b"];
-
-//duration in ms that bonus balls stay alive
-const BONUS_BALL_DURATION = 15000;
-
-
+const BLOCK_OFFSET_TOP = 75;
+const BLOCK_OFFSET_LEFT = 28;
+const ROW_COLORS = ["#e74c3c", "#f79948", "#f1c40f", "#2ecc71", "#3498db", "#5d209b"]; //colors for each row of blocks
+const BONUS_BALL_DURATION = 15000; //duration in ms that bonus balls stay alive
+//*class for the blocks
 class Block extends GameObject {
     constructor(position, width, height, color) {
         super(position, width, height, color, "block");
-        this.destroy = false;  //flag to mark for removal
+        this.destroy = false;  //flag to mark if a block has been hitted
         this.points = 2;  //base points per block
     } 
 }
-
-class Ball extends GameObject {
+//*class for the game ball
+class Ball extends GameObject {  
     constructor(position, width, height, color, isBonus = false) {
         super(position, width, height, color, "ball");
-        this.velocity = new Vector(0, 0);
+        this.velocity = new Vector(0, 0);  //velocity vector
         this.active = false;  //ball only moves after launch
         this.isBonus = isBonus;  //whether this is a temporary bonus ball
         this.lifeTimer = 0;  //tracks time alive for bonus balls
     }
 
-    launch() {
-        // launch at a random upward angle
-        const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);  //between -30 and 30 degrees
-        this.velocity.x = Math.cos(angle) * (Math.random() > 0.5 ? 1 : -1);
-        this.velocity.y = -Math.abs(Math.sin(angle)) - 0.8;  //always go up first
-        this.active = true;
+    launch() { //?launch at a random upward angle
+        const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
+        //convert the angle into a cartesian vector
+        this.velocity.x = Math.cos(angle);
+        //choose a random direction
+        if (Math.random() > 0.5) {
+            this.velocity.x *= -1;
+        }
+        this.velocity.y = -Math.abs(Math.sin(angle)) - 0.6;  //-Math.abs will always give a negative number, meaning the ball always goes upward
+        //0.6 will give you a little impulse upward for those cases where the angle is flat
+        this.active = true;  //used for update
     }
 
     update(deltaTime) {
-        if (!this.active) return;
+        if (!this.active) return;  //case1: the player hasn't started the game
 
-        if (this.isBonus) {
+        if (this.isBonus) {  //case2: bonus balls
             this.lifeTimer += deltaTime;  //accumulate time alive
         }
 
-        const speed = this.isBonus ? BALL_SPEED * 0.5 : BALL_SPEED;  //bonus balls slightly faster
-        this.velocity = this.velocity.normalize().times(speed);
-        this.position = this.position.plus(this.velocity.times(deltaTime));
+        const speed = this.isBonus ? BALL_SPEED * 0.5 : BALL_SPEED;  //bonus balls slightly slower
+        this.velocity = this.velocity.normalize().times(speed);  //normalize: same the direction, 
+        this.position = this.position.plus(this.velocity.times(deltaTime));  //moves the ball
     }
 
     isExpired() {
-        return this.isBonus && this.lifeTimer >= BONUS_BALL_DURATION;  //check if bonus time ran out
+        return this.isBonus && this.lifeTimer >= BONUS_BALL_DURATION;  //?check if bonus time ran out
     }
 
     reset(startX, startY) {
-        this.position = new Vector(startX, startY);
+        this.position = new Vector(startX, startY);  //starting point
         this.velocity = new Vector(0, 0);
-        this.active = false;
-        this.lifeTimer = 0;
+        this.active = false;  //the player hasn't started the game
+        this.lifeTimer = 0;  
     }
 }
-
+//*class for the paddle
 class Paddle extends GameObject {
     constructor(position, width, height, color) {
         super(position, width, height, color, "paddle");
-        this.velocity = new Vector(0, 0);
-        this.keys = [];
-        this.motion = {
-            left: { axis: "x", sign: -1 },
-            right: { axis: "x", sign: 1 },
+        this.velocity = new Vector(0, 0);  //velocity vector
+        this.motion = {  //movement of the paddle
+            left: {
+                    axis: "x", 
+                    sign: -1 },
+            right: { 
+                    axis: "x", 
+                    sign: 1 },
         };
+        this.keys = [];  //keys pressed to move the player
     }
 
     update(deltaTime) {
+        //restart the velocity
         this.velocity.x = 0;
         this.velocity.y = 0;
-
+        //modify the velocity according to the directions pressed
         for (const dir of this.keys) {
             const axis = this.motion[dir].axis;
             const sign = this.motion[dir].sign;
             this.velocity[axis] += sign;
         }
-
-        this.velocity = this.velocity.normalize().times(PADDLE_SPEED);
+        this.velocity = this.velocity.normalize().times(PADDLE_SPEED);  //normalize the velocity to avoid greater speed on diagonals
         this.position = this.position.plus(this.velocity.times(deltaTime));
         this.clampWithinCanvas();
     }
 
     clampWithinCanvas() {
+        //?left border
         if (this.position.x - this.halfSize.x < 0) {
-            this.position.x = this.halfSize.x;  //left wall clamp
+            this.position.x = this.halfSize.x;  
         }
+        //?right border
         if (this.position.x + this.halfSize.x > canvasWidth) {
-            this.position.x = canvasWidth - this.halfSize.x;  //right wall clamp
+            this.position.x = canvasWidth - this.halfSize.x;  
         }
     }
 }
-
-
+//*class to keep track of all the events and objects in the game
 class Game {
     constructor() {
-        // Add audio element - $
+        this.createEventListeners();
+        this.initObjects();
 
-        this.lives = 3;
-        this.score = 0;
-        this.blocksDestroyed = 0;
-        this.totalBlocks = BLOCK_ROWS * BLOCK_COLS;
-        this.state = "playing";  //states: playing, gameover, win
+        this.lives = 3;  //lives per run
+        this.score = 0;  //initialize score
+        this.blocksDestroyed = 0;  //initialize blocks destroyed
+        this.totalBlocks = BLOCK_ROWS * BLOCK_COLS;  
+        this.state = "playing";  //states to know in which part the player is
+
         this.bonusBalls = [];  //array for temporary extra balls
         this.lastBonusScore = 0;  //tracks last score where bonus was triggered
         this.bonusMessageTimer = 0;  //how long to show bonus message
         this.bonusMessage = "";
-
-        this.createEventListeners();
-        this.initObjects();
     }
 
     initObjects() {
+        //?add another object to draw a background
+        this.background = new GameObject(new Vector(canvasWidth / 2, canvasHeight / 2), canvasWidth, canvasHeight);
+        this.background.setSprite("assets/sprites/trak2_plate2b.png");
+
         this.paddle = new Paddle(
             new Vector(canvasWidth / 2, canvasHeight - 40), 100, 15, "#ecf0f1"
         );
@@ -145,7 +153,7 @@ class Game {
             new Vector(canvasWidth / 2, canvasHeight - 60), 12, 12, "#f0f0f0"
         );
 
-        // ui labels
+        //?ui labels details
         this.scoreLabel = new TextLabel(20, 30, "18px 'Courier New'", "#ffffff");
         this.livesLabel = new TextLabel(canvasWidth / 2 - 70, 30, "18px 'Courier New'", "#ffffff");
         this.blocksLabel = new TextLabel(canvasWidth - 150, 30, "18px 'Courier New'", "#ffffff");
@@ -158,73 +166,67 @@ class Game {
     }
 
     buildBlocks() {
-        this.blocks = [];
+        this.blocks = [];  //array to save the blocks
 
-        for (let row = 0; row < BLOCK_ROWS; row++) {
-            for (let col = 0; col < BLOCK_COLS; col++) {
-                const x = BLOCK_OFFSET_LEFT + col * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_WIDTH / 2;
+        for (let row = 0; row < BLOCK_ROWS; row++) {  //for each row
+            for (let col = 0; col < BLOCK_COLS; col++) {  //for each col
+                const x = BLOCK_OFFSET_LEFT + col * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_WIDTH / 2;  
                 const y = BLOCK_OFFSET_TOP + row * (BLOCK_HEIGHT + BLOCK_PADDING) + BLOCK_HEIGHT / 2;
-                const color = ROW_COLORS[row % ROW_COLORS.length];
-                const block = new Block(new Vector(x, y), BLOCK_WIDTH, BLOCK_HEIGHT, color);
-                this.blocks.push(block);
+                const color = ROW_COLORS[row % ROW_COLORS.length];  //every row diff color
+                const block = new Block(new Vector(x, y), BLOCK_WIDTH, BLOCK_HEIGHT, color);  //create block
+                this.blocks.push(block);  //add block to the array
             }
         }
     }
 
     spawnBonusBalls() {
-        //add 2 bonus balls when score hits a multiple of 15 blocks destroyed
-        for (let i = 0; i < 2; i++) {
-            const offsetX = (i === 0) ? -30 : 30;  //spread them slightly apart
+        //?add 2 bonus balls when score hits a multiple of 15 blocks destroyed
+        for (let i = 0; i < 2; i++) {  //two times for 2 balls
+            const offsetX = (i === 0) ? -30 : 30;  //spread them slightly apart, 1st ball -30, 2nd ball 30
             const bonus = new Ball(
-                new Vector(this.paddle.position.x + offsetX, canvasHeight - 70),
-                10, 10, "#f39c12", true  //orange color for bonus balls
+                new Vector(this.paddle.position.x + offsetX, canvasHeight - 70), 10, 10, "#f39c12", true  //orange color for bonus balls
             );
             bonus.launch();
             this.bonusBalls.push(bonus);
         }
 
         this.bonusMessage = "MULTI BALLS FOR 15 sec";
-        this.bonusMessageTimer = 1500;  //show message for 2.5 seconds
+        this.bonusMessageTimer = 2500;  //show message for 2.5 seconds
     }
 
-    checkBonusTrigger() {
-        //trigger bonus every 15 blocks destroyed, but only once per milestone
-        const milestone = Math.floor(this.blocksDestroyed / 15);
-        const lastMilestone = Math.floor(this.lastBonusScore / 15);
-
-        if (milestone > lastMilestone && this.blocksDestroyed > 0) {
-            this.lastBonusScore = this.blocksDestroyed;
+    checkBonusTrigger() {  //?trigger bonus every 15 blocks destroyed
+        if (this.blocksDestroyed > 0 && this.blocksDestroyed % 15 === 0) {
             this.spawnBonusBalls();
         }
     }
 
     handleBallBlockCollision(ball) {
-        for (const block of this.blocks) {
-            if (block.destroy) continue;
+        for (const block of this.blocks) {  //all active blocks
+            if (block.destroy) continue;  //case1: destroyed block
 
             if (boxOverlap(ball, block)) {
-                block.destroy = true;
+                block.destroy = true; 
                 this.blocksDestroyed++;
                 this.score += block.points;
 
                 this.checkBonusTrigger();
 
                 //figure out which side the ball hit to bounce correctly
-                const ballL = ball.position.x - ball.halfSize.x;
-                const ballR = ball.position.x + ball.halfSize.x;
-                const ballT = ball.position.y - ball.halfSize.y;
-                const ballB = ball.position.y + ball.halfSize.y;
-                const bkL = block.position.x - block.halfSize.x;
-                const bkR = block.position.x + block.halfSize.x;
-                const bkT = block.position.y - block.halfSize.y;
-                const bkB = block.position.y + block.halfSize.y;
+                const ballL = ball.position.x - ball.halfSize.x;  //left
+                const ballR = ball.position.x + ball.halfSize.x;  //right
+                const ballT = ball.position.y - ball.halfSize.y;  //top
+                const ballB = ball.position.y + ball.halfSize.y;  //below
+                const bkL = block.position.x - block.halfSize.x;  //left
+                const bkR = block.position.x + block.halfSize.x;  //right
+                const bkT = block.position.y - block.halfSize.y;  //top
+                const bkB = block.position.y + block.halfSize.y;  //below
 
                 const overlapLeft = ballR - bkL;
                 const overlapRight = bkR - ballL;
                 const overlapTop = ballB - bkT;
                 const overlapBottom = bkB - ballT;
 
-                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);  //first hit
 
                 if (minOverlap === overlapTop || minOverlap === overlapBottom) {
                     ball.velocity.y *= -1;  //bounce vertically
@@ -236,11 +238,10 @@ class Game {
             }
         }
 
-        // remove destroyed blocks
-        this.blocks = this.blocks.filter(b => !b.destroy);
+        this.blocks = this.blocks.filter(b => !b.destroy);  //?all blocks with destroy == false
 
         if (this.blocks.length === 0) {
-            this.state = "win";  //all blocks cleared
+            this.state = "win";  //condition to win screen
         }
     }
 
@@ -264,12 +265,12 @@ class Game {
 
     handlePaddleCollision(ball) {
         if (boxOverlap(ball, this.paddle)) {
-            ball.position.y = this.paddle.position.y - this.paddle.halfSize.y - ball.halfSize.y;
+            ball.position.y = this.paddle.position.y - this.paddle.halfSize.y - ball.halfSize.y;  //stop bug with paddle
 
             //angle depends on where the ball hits the paddle
-            const hitPos = (ball.position.x - this.paddle.position.x) / this.paddle.halfSize.x;  //-1 to 1
-            const angle = hitPos * (Math.PI / 3);  //max 60 degrees
-            const speed = ball.velocity.magnitude();
+            const hitPos = (ball.position.x - this.paddle.position.x) / this.paddle.halfSize.x;  //position of the paddle, 0 for center
+            const angle = hitPos * (Math.PI / 3);  //max 60 degrees 
+            const speed = ball.velocity.magnitude();  //anglo -> vector
             ball.velocity.x = Math.sin(angle) * speed;
             ball.velocity.y = -Math.abs(Math.cos(angle) * speed);  //always bounce upward
         }
@@ -280,19 +281,19 @@ class Game {
 
         this.paddle.update(deltaTime);
 
-        //update bonus message timer
+        //?update bonus message timer
         if (this.bonusMessageTimer > 0) {
             this.bonusMessageTimer -= deltaTime;
         }
 
-        //main ball logic
+        //?main ball logic
         if (this.ball.active) {
             this.ball.update(deltaTime);
             this.handleWallCollisions(this.ball);
             this.handlePaddleCollision(this.ball);
             this.handleBallBlockCollision(this.ball);
 
-            //ball fell below screen
+            //?ball fell below screen
             if (this.ball.position.y - this.ball.halfSize.y > canvasHeight) {
                 this.lives--;
                 if (this.lives <= 0) {
@@ -303,7 +304,7 @@ class Game {
             }
         }
 
-        //bonus balls logic
+        //?bonus balls logic
         for (let i = this.bonusBalls.length - 1; i >= 0; i--) {
             const bb = this.bonusBalls[i];
             bb.update(deltaTime);
@@ -311,35 +312,10 @@ class Game {
             this.handlePaddleCollision(bb);
             this.handleBallBlockCollision(bb);
 
-            //remove if expired or fell below screen
+            //?remove if expired or fell below screen
             if (bb.isExpired() || bb.position.y - bb.halfSize.y > canvasHeight) {
                 this.bonusBalls.splice(i, 1);
             }
-        }
-    }
-
-    drawBackground(ctx) {
-        //$dark gradient background
-        const grad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-        grad.addColorStop(0, "#0f0c29");
-        grad.addColorStop(1, "#24243e");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        //$subtle grid lines for depth
-        ctx.strokeStyle = "rgba(255,255,255,0.04)";
-        ctx.lineWidth = 1;
-        for (let x = 0; x < canvasWidth; x += 40) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvasHeight);
-            ctx.stroke();
-        }
-        for (let y = 0; y < canvasHeight; y += 40) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvasWidth, y);
-            ctx.stroke();
         }
     }
 
@@ -348,13 +324,13 @@ class Game {
         this.livesLabel.draw(ctx, `LIVES: ${"♡ ".repeat(this.lives).trim()}`);
         this.blocksLabel.draw(ctx, `BLOCKS: ${this.blocksDestroyed}/${this.totalBlocks}`);
 
-        //show timer for active bonus balls
+        //?show timer for active bonus balls
         if (this.bonusBalls.length > 0) {
             const remaining = Math.ceil((BONUS_BALL_DURATION - this.bonusBalls[0].lifeTimer) / 1000);
             this.timerLabel.draw(ctx, `MULTI BALL: ${remaining}sec`);
         }
 
-        //show bonus triggered message
+        //?show bonus triggered message
         if (this.bonusMessageTimer > 0) {
             ctx.save();
             ctx.textAlign = "center";
@@ -364,15 +340,16 @@ class Game {
     }
 
     drawOverlay(ctx, title, subtitle) {
-        //$semi-transparent overlay for game over / win
-        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        //?semi-transparent overlay for game over / win
+        ctx.fillStyle = "rgba(0,0,0,0.60)";
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
         ctx.save();
         ctx.textAlign = "center";
 
         ctx.font = "48px 'Courier New'";
-        ctx.fillStyle = title === "GAME OVER" ? "#e74c3c" : "#2ecc71";
+        ctx.fillStyle = title === "GAME OVER" ? "#e74c3c" : "#2ecc71";  //if game over screen is needed, the letters will be red
+        //logic managed on draw
         ctx.fillText(title, canvasWidth / 2, canvasHeight / 2);
 
         ctx.font = "20px 'Courier New'";
@@ -387,34 +364,17 @@ class Game {
     }
 
     draw(ctx) {
-        this.drawBackground(ctx);
+        this.background.draw(ctx);
 
-        //draw all blocks
-        for (const block of this.blocks) {
+        for (const block of this.blocks) {  //?draw all blocks
             block.draw(ctx);
-
-            //subtle glow effect on top of blocks $
-            ctx.save();
-            ctx.globalAlpha = 0.25;
-            ctx.fillStyle = block.color;
-            ctx.fillRect(
-                block.position.x - block.halfSize.x,
-                block.position.y - block.halfSize.y,
-                block.size.x, 4  //thin glow strip at top
-            );
-            ctx.restore();
         }
 
         this.paddle.draw(ctx);
         this.ball.draw(ctx);
 
-        //draw bonus balls with glow
-        for (const bb of this.bonusBalls) {
-            ctx.save();
-            ctx.shadowColor = "#f39c12";
-            ctx.shadowBlur = 12;
+        for (const bb of this.bonusBalls) {  //?draw bonus balls
             bb.draw(ctx);
-            ctx.restore();
         }
 
         this.drawScreen(ctx);
@@ -425,7 +385,7 @@ class Game {
             this.drawOverlay(ctx, "YOU WIN!", "press R to restart");
         }
 
-        //launch hint when ball is idle
+        //?launch hint when player hasn't started the game
         if (this.state === "playing" && !this.ball.active) {
             ctx.save();
             ctx.textAlign = "center";
@@ -457,7 +417,7 @@ class Game {
             }
         });
 
-        window.addEventListener('keyup', (event) => { //$
+        window.addEventListener('keyup', (event) => { 
             if (event.key === 'ArrowLeft' || event.key === 'a') {
                 this.delKey('left');
             }
@@ -467,13 +427,13 @@ class Game {
         });
     }
 
-    addKey(direction) { //$
+    addKey(direction) { 
         if (!this.paddle.keys.includes(direction)) {
             this.paddle.keys.push(direction);
         }
     }
 
-    delKey(direction) {  //$
+    delKey(direction) {  
         const idx = this.paddle.keys.indexOf(direction);
         if (idx !== -1) {
             this.paddle.keys.splice(idx, 1);
@@ -482,7 +442,7 @@ class Game {
 }
 
 
-function restartGame() {
+function restartGame() {  //?when player wins or looses
     game = new Game();
 }
 
