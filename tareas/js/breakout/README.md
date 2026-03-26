@@ -1,4 +1,10 @@
 ### *BREAKOUT*
+---
+
+## >>objective<<
+destroy all the blocks using the ball and paddle before you run out of lives. the ball bounces off the **left**, **right**, and **top** walls, but the **bottom** is yours to defend.
+
+---
 
 ## >>how to run<< 
 1. Clone or download the repo
@@ -27,11 +33,6 @@
  
 ---
  
-## >>objective<<
-destroy all the blocks using the ball and paddle before you run out of lives. the ball bounces off the **left**, **right**, and **top** walls, but the **bottom** is yours to defend.
- 
----
- 
 ## >>extra feature: MULTI BALL<<
 every **15 blocks destroyed**, two bonus orange balls spawn for **15 seconds**:
  
@@ -39,5 +40,7 @@ every **15 blocks destroyed**, two bonus orange balls spawn for **15 seconds**:
 - they bounce off walls, the paddle, and destroy blocks just like the main ball
 - they disappear automatically when time runs out (or if they fall)
 - a countdown timer shows how long they have left
+
+---
 
 ### **ENJOY!**
