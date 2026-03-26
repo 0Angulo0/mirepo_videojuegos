@@ -1,0 +1,15 @@
+#this is a file that indicates which files and directories should ignore,
+# and do not have to be added to the repo
+
+# mac os, mac system file
+.DS_Store
+
+# windows, windows explorer thumbnail cache and windows folder settings file
+Thumbs.db
+desktop.ini
+
+# vs code, your personal vs code settings
+.vscode/
+
+# logs, auto-generated error log files
+*.log
