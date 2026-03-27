@@ -143,15 +143,16 @@ class Game {
     initObjects() {
         //?add another object to draw a background
         this.background = new GameObject(new Vector(canvasWidth / 2, canvasHeight / 2), canvasWidth, canvasHeight);
-        this.background.setSprite("assets/sprites/Download premium vector of Geometrical patterned blue scifi background vector by Aum about background, technology, technology backgrounds, neon, and dark blue background 2340052.jpg");
+        this.background.setSprite("assets/sprites/background.jpg");
 
         this.paddle = new Paddle(
-            new Vector(canvasWidth / 2, canvasHeight - 40), 100, 15, "#ecf0f1"
+            new Vector(canvasWidth / 2, canvasHeight - 40), 100, 15, "#45006b"
         );
 
         this.ball = new Ball(
-            new Vector(canvasWidth / 2, canvasHeight - 60), 12, 12, "#f0f0f0"
+            new Vector(canvasWidth / 2, canvasHeight - 60), 25, 20, "#f0f0f0"
         );
+        this.ball.setSprite("assets/sprites/ovni.png");
 
         //?ui labels details
         this.scoreLabel = new TextLabel(20, 38, "18px 'Courier New'", "#ffffff");
@@ -184,8 +185,9 @@ class Game {
         for (let i = 0; i < 2; i++) {  //two times for 2 balls
             const offsetX = (i === 0) ? -30 : 30;  //spread them slightly apart, 1st ball -30, 2nd ball 30
             const bonus = new Ball(
-                new Vector(this.paddle.position.x + offsetX, canvasHeight - 70), 10, 10, "#f39c12", true  //orange color for bonus balls
+                new Vector(this.paddle.position.x + offsetX, canvasHeight - 70), 22, 25, "#f39c12", true  //orange color for bonus balls
             );
+            bonus.setSprite("assets/sprites/meteorite.png");
             bonus.launch();
             this.bonusBalls.push(bonus);
         }
