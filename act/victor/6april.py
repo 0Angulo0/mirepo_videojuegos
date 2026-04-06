@@ -1,5 +1,5 @@
 #Programa que recibe un string x y regresa true si pertenece al lenguaje L
-#y false en caso contrario
+#y false en caso contrario. Sin tabla.
 #L = (a|b)* bb(a|b)*
 
 def reconoce(w):
