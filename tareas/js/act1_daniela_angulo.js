@@ -31,11 +31,11 @@ function firstNonrepeating(str){
 }
 //bubble sort algorithm to sort an array of numbers (modifies original)
 function bubbleSort(arr){
-    const n = arr.length; //store length for convenience 
+    const n = arr.length; //store length
         for(let i = 0; i < n -1; i++){  //first index to compare
             for(let j = 0; j < n -1 -i; j++){  //second index to compare
                 if(arr[j] > arr[j+1]){  
-                    [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];  //swap using destructuring        
+                    [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];  //swap        
                 }
             }
         }
